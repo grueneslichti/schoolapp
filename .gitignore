@@ -1,0 +1,56 @@
+# ============ Python/Backend ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.env
+.env.local
+*.log
+
+# Datenbank
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+app.db
+
+# Uploads - NIEMALS committen!
+backend/uploads/
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# ============ Flutter ============
+app/.dart_tool/
+app/.packages
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/build/
+app/.pub-cache/
+app/.pub/
+app/pubspec.lock
+
+# Lokale Flutter-Konfiguration
+app/.metadata
+app/android/app/debug
+app/android/app/profile
+app/ios/Flutter/.last_build_id
+app/ios/Runner.xcworkspace/xcuserdata/
+app/ios/Pods/
+
+# ============ OS ============
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============ Secrets ============
+*.key
+*.pem
+secrets/
