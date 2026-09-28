@@ -15,9 +15,7 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
   int elapsedSeconds = 0;
   bool isRunning = false;
   Timer? timer;
-
   final List<int> timeOptions = [15, 30, 45, 60];
-
   void startTimer() {
     setState(() {
       isRunning = true;
@@ -46,7 +44,6 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
     }
     await _finishFocusSession(completed: false);
   }
-
   Future<void> _finishFocusSession({required bool completed}) async {
     timer?.cancel();
     final actualMinutes = (elapsedSeconds / 60).ceil();
@@ -55,7 +52,6 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
       remainingSeconds = 0;
       elapsedSeconds = 0;
     });
-
     final result = await ApiService().completeFocusSession(
       plannedMinutes: selectedMinutes,
       actualMinutes: actualMinutes,
@@ -117,7 +113,6 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
       );
       return;
     }
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Fehler beim Speichern. XP wurden nicht gutgeschrieben.'),
@@ -131,7 +126,7 @@ class _FocusModeScreenState extends State<FocusModeScreen> {
     final secs = seconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
-
+  
   @override
   void dispose() {
     timer?.cancel();

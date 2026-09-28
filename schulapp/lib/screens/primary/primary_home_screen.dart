@@ -19,6 +19,7 @@ import '../student_exams_screen.dart';
 import '../challenge_screen.dart';
 import '../../widgets/graduation_photo_dialog.dart';
 
+
 class PrimaryHomeScreen extends StatefulWidget {
   final String realName;
   const PrimaryHomeScreen({super.key, required this.realName});

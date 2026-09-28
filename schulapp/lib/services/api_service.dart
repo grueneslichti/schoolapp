@@ -12,8 +12,9 @@ class ApiService {
 
   // WICHTIG: Base URL anpassen!!!
   //Server_IP_ADRESSE!!!
-  //Eventuell in env schreiben
-  static const String baseUrl = '';
+  //In env schreiben
+
+  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
 
   static String fileUrl(String path) {
     if (path.startsWith('http://') || path.startsWith('https://')) {

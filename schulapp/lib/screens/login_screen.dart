@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/localization_service.dart';
 import 'change_password_screen.dart';
 import 'primary/primary_home_screen.dart';
 import 'secondary/secondary_home_screen.dart';
@@ -21,11 +22,17 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String selectedRole = 'student';
   String? _backgroundImageUrl;
+  final LocalizationService _localization = LocalizationService();
 
   @override
   void initState() {
     super.initState();
+    _initialize();
+  }
+  Future<void> _initialize() async {
+    await _localization.loadSavedLocale();
     _loadSavedBackground();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -34,27 +41,25 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-
   void _showDisambiguationDialog(List options, String password) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.group, color: Colors.orange, size: 28),
             SizedBox(width: 10),
-            Expanded(child: Text('Wie heißt du?')),
+            Expanded(child: Text(_localization.translate('who_are_you'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Es gibt mehrere Schüler mit diesem Namen. '
-              'Bitte wähle deinen Anmeldenamen:',
-              style: TextStyle(height: 1.4),
+            Text(
+              _localization.translate('multiple_students_message'),
+              style: const TextStyle(height: 1.4),
             ),
             const SizedBox(height: 16),
             ...options.map((opt) => Padding(
@@ -110,6 +115,10 @@ class _LoginScreenState extends State<LoginScreen> {
         return PrimaryHomeScreen(realName: realName);
     }
   }
+  Future<void> _changeLanguage(String locale) async {
+    await _localization.loadLocale(locale);
+    if (mounted) setState(() {});
+  }
   Future<void> _handleLogin() async {
     setState(() => _isLoading = true);
     final identifier = _pseudonymController.text.trim();
@@ -119,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ? await ApiService().loginTeacher(identifier, password)
         : await ApiService().loginStudent(identifier, password);
     if (!mounted) return;
-  if (result != null && result['requires_disambiguation'] == true) {
+    if (result != null && result['requires_disambiguation'] == true) {
       setState(() => _isLoading = false);
       _showDisambiguationDialog(
         result['options'] as List,
@@ -132,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final schoolName = result['school_name']?.toString() ?? 'Unbekannte Schule';
       final schoolType = result['school_type']?.toString() ?? 'primary';
       final role = result['role'].toString();
-        final realName = result['real_name']?.toString()
+      final realName = result['real_name']?.toString()
           ?? result['full_name']?.toString()
           ?? result['pseudonym']?.toString()
           ?? 'User';
@@ -167,7 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
           : error?.toString();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(errorMessage ?? 'Login fehlgeschlagen. Bitte Daten prüfen.'),
+          content: Text(errorMessage ?? _localization.translate('login_failed')),
           backgroundColor: Colors.red,
         ),
       );
@@ -201,6 +210,59 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          
+          // Sprachauswahl oben rechts
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 10,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: DropdownButton<String>(
+                value: _localization.currentLocale,
+                underline: const SizedBox(),
+                icon: const Icon(Icons.language, size: 20),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'de',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(width: 8),
+                        Text('Deutsch', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 'en',
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(width: 8),
+                        Text('English', style: TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    _changeLanguage(value);
+                  }
+                },
+              ),
+            ),
+          ),
+
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -222,15 +284,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Icon(Icons.school, size: 80, color: Colors.blue.shade400),
                     const SizedBox(height: 20),
-                    const Text(
-                      'Willkommen!',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    Text(
+                      _localization.translate('welcome'),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 30),
                     TextField(
                       controller: _pseudonymController,
                       decoration: InputDecoration(
-                        labelText: selectedRole == 'teacher' ? 'E-Mail' : 'Email / Name',
+                        labelText: selectedRole == 'teacher' 
+                            ? _localization.translate('email') 
+                            : _localization.translate('email_or_name'),
                         prefixIcon: const Icon(Icons.person),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -242,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
-                        labelText: 'Passwort',
+                        labelText: _localization.translate('password'),
                         prefixIcon: const Icon(Icons.lock),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -253,9 +317,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     DropdownButton<String>(
                       value: selectedRole,
                       isExpanded: true,
-                      items: const [
-                        DropdownMenuItem(value: 'student', child: Text('Schüler-Login')),
-                        DropdownMenuItem(value: 'teacher', child: Text('Lehrer-Login')),
+                      items: [
+                        DropdownMenuItem(
+                          value: 'student',
+                          child: Text(_localization.translate('student_login')),
+                        ),
+                        DropdownMenuItem(
+                          value: 'teacher',
+                          child: Text(_localization.translate('teacher_login')),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value != null) {
@@ -277,9 +347,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text(
-                                'Anmelden',
-                                style: TextStyle(
+                            : Text(
+                                _localization.translate('login'),
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -303,18 +373,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             _pseudonymController.clear();
                             _passwordController.clear();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Logge dich jetzt mit deinem Namen und dem Start-Passwort ein.',
-                                ),
+                              SnackBar(
+                                content: Text(_localization.translate('registration_success')),
                                 backgroundColor: Colors.green,
-                                duration: Duration(seconds: 4),
+                                duration: const Duration(seconds: 4),
                               ),
                             );
                           }
                         },
                         icon: const Icon(Icons.person_add),
-                        label: const Text('Registrieren'),
+                        label: Text(_localization.translate('register')),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.purple.shade700,
                           side: BorderSide(color: Colors.purple.shade300),
@@ -329,14 +397,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         await showDialog<void>(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Passwort vergessen?'),
+                            title: Text(_localization.translate('forgot_password_title')),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 TextField(
                                   controller: nameController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Dein Name oder E-mail',
+                                  decoration: InputDecoration(
+                                    labelText: _localization.translate('your_name_or_email'),
                                   ),
                                 ),
                               ],
@@ -344,7 +412,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx),
-                                child: const Text('Abbrechen'),
+                                child: Text(_localization.translate('cancel')),
                               ),
                               ElevatedButton(
                                 onPressed: () async {
@@ -352,10 +420,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (username.isEmpty) {
                                     if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Bitte gib deinen Namen oder E-mail ein.',
-                                        ),
+                                      SnackBar(
+                                        content: Text(_localization.translate('enter_name_or_email')),
                                         backgroundColor: Colors.orange,
                                       ),
                                     );
@@ -368,21 +434,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                     SnackBar(
                                       content: Text(
                                         success
-                                            ? 'Passwort zurückgesetzt! Bitte frage einen Lehrer/Admin nach dem neuen Passwort.'
-                                            : 'Netzwerkfehler. Bitte versuche es später.',
+                                            ? _localization.translate('password_reset_success')
+                                            : _localization.translate('password_reset_error'),
                                       ),
                                       backgroundColor: success ? Colors.green : Colors.red,
                                       duration: const Duration(seconds: 5),
                                     ),
                                   );
                                 },
-                                child: const Text('Anfragen'),
+                                child: Text(_localization.translate('request')),
                               ),
                             ],
                           ),
                         );
                       },
-                      child: const Text('Passwort vergessen?'),
+                      child: Text(_localization.translate('forgot_password')),
                     ),
                   ],
                 ),
