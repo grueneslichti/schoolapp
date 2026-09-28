@@ -93,6 +93,7 @@ def login_student(
         )
     student = matches[0]
     if not student.login_name:
+        fallback_name = student.real_name or student.pseudonym or "Schüler"
         student.login_name = generate_unique_login_name(db, student.real_name)
         db.flush()
         db.commit()

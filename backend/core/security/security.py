@@ -48,6 +48,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 def generate_unique_login_name(db, real_name: str) -> str:
+    if not real_name or not real_name.strip():
+        return f"Schüler_{secrets.token_hex(4)}"
     real_name = real_name.strip()
     existing = db.query(Student).filter(Student.login_name == real_name).first()
     if not existing:
