@@ -2,7 +2,7 @@ Recommendations for production use:
 - Server located in an area where it makes sense.
 - **HTTPS**
 - Regular **backups** of `app.db`
-- **ATTENTION!!! You must change the `SECRET_KEY` for commercial use !!!**
+- **ATTENTION!!! You must change the `SECRET_KEY` for commercial use !!!** changge itin /backend/core/config.py
 
 # Structure
 
