@@ -38,12 +38,6 @@ mit XP-System, Avataren, Spielen und KI-Maskottchen.
 ## Self-Hosting für Schulen
 Die App ist dafür gemacht, dass Schulen sie selbst betreiben alle Daten bleiben im Haus.
 
-Empfehlungen für den Produktivbetrieb:
-- Server in **Österreich/EU**
-- **HTTPS**
-- Regelmäßige **Backups** der `app.db`
-- **ACHTUNG!!! `SECRET_KEY` unbedingt ändern bei kommerzieller Nutzung !!!**
-
 
 ## English Text
 
