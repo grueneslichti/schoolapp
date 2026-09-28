@@ -77,6 +77,7 @@ auf deinen Backend-Rechner ändern (z.B. http://192.168.8.119:8000)
 flutter run
 
 
+
 ## English Text
 
 A gamified school app to boost classroom motivation – 
