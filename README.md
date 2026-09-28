@@ -41,6 +41,12 @@ Empfehlungen für den Produktivbetrieb:
 - Regelmäßige **Backups** der `app.db`
 - **ACHTUNG!!! `SECRET_KEY` unbedingt ändern bei kommerzieller Nutzung !!!**
 
+# Struktur
+
+- `backend/` – FastAPI Backend (Python)
+- `app/` – Flutter Frontend (Dart)
+
+
 ## Installation
 
 ### Backend
