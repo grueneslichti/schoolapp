@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schulwechsel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="fa-solid fa-school-circle-check"></i> Schulwechsel</span>
+            <a href="/admin/promotion-manager" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Zurück</a>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h3>Schüler an andere Schule versetzen</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa-solid fa-info-circle"></i>
+                    <strong>Schulwechsel</strong>.
+                </div>
+                <div class="row">
+                    <!-- Schüler auswählen -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>1. Schüler auswählen</strong></label>
+                        <select id="student-select" class="form-select" onchange="updateStudentInfo()">
+                            <option value="">-- Schüler wählen --</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}"
+                                    data-school-id="{{ student.current_school_id }}"
+                                    data-school="{{ student.current_school }}"
+                                    data-class="{{ student.current_class }}">
+                                {{ student.name }} ({{ student.current_school }} - {{ student.current_class }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Aktuelle Zuordnung:</label>
+                        <div id="current-info" class="alert alert-secondary mb-0">
+                            <em>Bitte Schüler auswählen</em>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>2. Art des Wechsels</strong></label>
+                        <select id="transfer-type" class="form-select" onchange="updateReasonPlaceholder()">
+                            <option value="school_transfer">Schulwechsel</option>
+                            <option value="graduation_transfer">🎓 Schulabschluss </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>3. Grund (optional)</strong></label>
+                        <input type="text" id="reason" class="form-control" placeholder="z.B. Umzug nach München">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>4. Neue Schule</strong></label>
+                        <select id="target-school" class="form-select" onchange="updateTargetClasses()">
+                            <option value="">-- Neue Schule wählen --</option>
+                            {% for school in schools %}
+                            <option value="{{ school.id }}">{{ school.name }} ({{ school.country_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><strong>5. Neue Klasse</strong></label>
+                        <select id="target-class" class="form-select" disabled>
+                            <option value="">-- Zuerst Schule wählen --</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="doTransfer()" class="btn btn-primary btn-lg w-100">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><h5>Schulwechsel</h5></div>
+                    <div class="card-body">
+                        <p>Schüler zieht um und wechselt an eine andere Schule gleichen Typs.</p>
+                        <ul>
+                            <li>XP und Items werden mitgenommen ✅</li>
+                            <li>Freunde an der alten Schule bleiben erhalten</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header"><h5>🎓 Schulabschluss</h5></div>
+                    <div class="card-body">
+                        <p>Schüler hat eine Schulstufe abgeschlossen und wechselt an die nächsthöhere Schule.</p>
+                        <ul>
+                            <li>XP und Items werden mitgenommen ✅</li>
+                            <li>App wechselt ggf. zur Sekundar-Variante</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const allClasses = [
+            "{{% for c in classes %}}",
+            {id: "{{ c.id }}", name, "{{ c.name }}": school_id, "{{ c.school_id }}": school_name, "{{ c.school_name }}":
+            "{{% endfor %}}"
+        ,},]
+        function updateStudentInfo() {
+            const select = document.getElementById('student-select');
+            const infoBox = document.getElementById('current-info');
+            if (!select.value) {
+                infoBox.innerHTML = '<em>Bitte Schüler auswählen</em>';
+                return;
+            }
+            const opt = select.options[select.selectedIndex];
+            infoBox.innerHTML = `
+                <strong>Schule:</strong> ${opt.dataset.school}<br>
+                <strong>Klasse:</strong> ${opt.dataset.class}
+            `;
+        }
+        function updateTargetClasses() {
+            const schoolId = document.getElementById('target-school').value;
+            const classSelect = document.getElementById('target-class');
+            classSelect.innerHTML = '<option value="">-- Klasse wählen --</option>';
+            if (!schoolId) {
+                classSelect.disabled = true;
+                return;
+            }
+            const filtered = allClasses.filter(c => c.school_id === schoolId);
+            filtered.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.name;
+                classSelect.appendChild(option);
+            });
+            classSelect.disabled = false;
+        }
+        function updateReasonPlaceholder() {
+            const type = document.getElementById('transfer-type').value;
+            const reasonInput = document.getElementById('reason');
+            
+            if (type === 'school_transfer') {
+                reasonInput.placeholder = 'z.B. Umzug nach München';
+            } else {
+                reasonInput.placeholder = 'z.B. Abschluss der Grundschule';
+            }
+        }
+        function doTransfer() {
+            const studentId = document.getElementById('student-select').value;
+            const newClassId = document.getElementById('target-class').value;
+            const transferType = document.getElementById('transfer-type').value;
+            const reason = document.getElementById('reason').value.trim();
+            
+            if (!studentId || !newClassId) {
+                alert('Bitte Schüler und Zielklasse auswählen!');
+                return;
+            }
+            const studentOpt = document.getElementById('student-select').options[document.getElementById('student-select').selectedIndex];
+            const targetSchoolId = document.getElementById('target-school').value;
+            if (studentOpt.dataset.schoolId === targetSchoolId) {
+                alert('Für Wechsel innerhalb der gleichen Schule nutze bitte die normale Versetzung im Hauptmenü!');
+                return;
+            }
+            const typeText = transferType === 'school_transfer' ? 'Umzug' : 'Schulabschluss';
+            if (!confirm(`Möchtest du wirklich einen ${typeText} durchführen?\n\nXP und Items werden mitgenommen.`)) {
+                return;
+            }
+            fetch('/admin/promotion-manager/api/transfer-school', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: studentId,
+                    new_class_id: newClassId,
+                    transfer_type: transferType,
+                    reason: reason || null
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.detail) {
+                    alert('Fehler: ' + data.detail);
+                } else {
+                    alert(data.message);
+                    location.reload();
+                }
+            })
+            .catch(err => alert('Fehler: ' + err));
+        }
+    </script>
+</body>
+</html>

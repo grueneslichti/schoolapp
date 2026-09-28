@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zuweisungen für {{ teacher.full_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fa-solid fa-chalkboard-teacher"></i> Admin Panel
+            </span>
+            <a href="/admin/assignment-manager" class="btn btn-outline-light btn-sm">
+                <i class="fa-solid fa-arrow-left"></i> Zurück zur Übersicht
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    Zuweisungen für {{ teacher.full_name }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa-solid fa-info-circle"></i>
+                  <strong>Anleitung:</strong> Wählen Sie zuerst die Schulen aus, in denen Lehrer unterrichtet.
+    Danach werden unten nur Klassen aus diesen Schulen angezeigt. Klicken Sie auf "Speichern" um die Änderungen zu übernehmen.
+                </div>
+                {% if classes|length == 0 %}
+                <div class="alert alert-warning">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Dieser Lehrer ist aktuell keiner Schule zugewiesen.
+                    Bitte zuerst oben eine oder mehrere Schulen auswählen und speichern.
+</div>
+{% endif %}
+                <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fa-solid fa-school"></i>
+                        Schulen
+                    </h4>
+                </div>
+                <div class="card-body">
+                <div class="row">
+                {% for school in schools %}
+                    <div class="col-md-4 col-sm-6 mb-2">
+                    <label class="form-check">
+                        <input type="checkbox"
+                           class="form-check-input school-checkbox"
+                           value="{{ school.id }}"
+                           {% if school.is_assigned %}checked{% endif %}>
+                    <span class="form-check-label">
+                        <strong>{{ school.name }}</strong>
+                        <small class="text-muted">({{ school.country_code }})</small>
+                    </span>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-3">
+            <button type="button"
+                    class="btn btn-success"
+                    onclick="saveSchools()">
+                <i class="fa-solid fa-save"></i>
+                Schulen speichern
+            </button>
+        </div>
+    </div>
+</div>
+            <div id="existing-subjects">
+    {% for subject, class_ids in subjects.items() %}
+    <div class="card mb-3 subject-card" data-subject="{{ subject }}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="card-title mb-0">{{ subject }}</h4>
+            <button type="button"
+                    class="btn btn-danger btn-sm"
+                    onclick="deleteSubject('{{ subject }}')">
+                <i class="fa-solid fa-trash"></i>
+                Fach löschen
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for class in classes %}
+                <div class="col-md-4 col-sm-6 mb-2">
+                    <label class="form-check">
+                        <input type="checkbox"
+                               class="form-check-input class-checkbox"
+                               data-subject="{{ subject }}"
+                               value="{{ class.id }}"
+                               {% if class.id in class_ids %}checked{% endif %}>
+                        <span class="form-check-label">
+                            <strong>{{ class.school_name }}</strong> - {{ class.name }}
+                        </span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h4 class="card-title">Neues Fach hinzufügen</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <input type="text" 
+                                       id="new-subject-name" 
+                                       class="form-control" 
+                                       placeholder="z.B. Mathematik, Deutsch, Englisch...">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" 
+                                        class="btn btn-success w-100" 
+                                        onclick="addNewSubject()">
+                                    <i class="fa-solid fa-plus"></i> Fach hinzufügen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="button" 
+                            class="btn btn-primary btn-lg" 
+                            onclick="saveAllAssignments()">
+                        <i class="fa-solid fa-save"></i> Alle Zuweisungen speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const teacherId = "{{ teacher.id }}";   
+    const classesData = JSON.parse('{{classes | tojson }}');
+    console.lag("Teacher:", teacherId);
+    console.lag("Allowed classes", classesData);
+    function saveSchools() {
+        const checkedSchools = document.querySelectorAll(".school-checkbox:checked");
+        const schoolIds = Array.from(checkedSchools).map(cb => cb.value);
+        fetch("/admin/assignment-manager/save-schools", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                teacher_id: teacherId,
+                school_ids: schoolIds
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(text);
+                });
+            }
+            return response.json();
+        })
+        .then(result => {
+            alert(result.message || "Schule gespseichert");
+            location.reload();
+        })
+        .catch(error => {
+            console.error(error);
+            alert("Fehler beim Speichern" + error.message);
+        })
+    }
+    const allClassesNames = '{{ classes | map(attribute="name") | list | tojson }}';  
+    const classIds = JSON.parse(allClassesData);
+    const classNames = JSON.parse(allClassesNames);  
+    const allClasses = classIds.map((id, index) => ({
+        id: id,
+        name: classNames[index]
+    }));
+    function addNewSubject() {
+        const subjectName = document.getElementById('new-subject-name').value.trim();
+        if (!subjectName) {
+            alert('Bitte geben Sie einen Fachnamen ein!');
+            return;
+        }
+        
+        if (document.querySelector(`[data-subject="${subjectName}"]`)) {
+            alert('Dieses Fach existiert bereits!');
+            return;
+        }
+        if (classesData.lenght === 0) {
+            alert("Bitte zuerst mindestens eine Schule zuweißen");
+            return;
+        }      
+        const checkboxesHtml = classesData.map(c => `
+            <div class="col-md-4 col-sm-6 mb-2">
+                <label class="form-check">
+                    <input type="checkbox" 
+                           class="form-check-input class-checkbox" 
+                           data-subject="${subjectName}"
+                           value="${c.id}">
+                    <span class="form-check-label">
+                        <strong>${c.school_name}</strong> - ${c.name}
+                    </span>
+                </label>
+            </div>
+        `).join('');        
+        const cardHtml = `
+            <div class="card mb-3 subject-card" data-subject="${subjectName}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">${subjectName}</h4>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteSubject('${subjectName}')">
+                        <i class="fa-solid fa-trash"></i> Fach löschen
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        ${checkboxesHtml}
+                    </div>
+                </div>
+            </div>
+        `;        
+        document.getElementById('existing-subjects').insertAdjacentHTML('beforeend', cardHtml);
+        document.getElementById('new-subject-name').value = '';
+    }
+    function deleteSubject(subjectName) {
+        if (!confirm(`Möchtest du das Fach "${subjectName}" und alle zugehörigen Zuweisungen wirklich löschen?`)) {
+            return;
+        } 
+        fetch(`/api/v1/admin/assignments/teacher/${teacherId}/subject/${encodeURIComponent(subjectName)}`, {
+            method: 'DELETE'
+        })
+        .then(response => {
+            if (response.ok) {
+                document.querySelector(`[data-subject="${subjectName}"]`).remove();
+                alert(`Fach "${subjectName}" wurde gelöscht!`);
+            } else {
+                alert('Fehler beim Löschen!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Netzwerkfehler beim Löschen!');
+        });
+    }
+    function saveAllAssignments() {
+        const subjectCards = document.querySelectorAll('.subject-card');
+        const promises = [];
+        if (subjectCards.length === 0) {
+            alert('Keine Fächer zum Speichern gefunden!');
+            return;
+        }
+        subjectCards.forEach(card => {
+            const subject = card.getAttribute('data-subject');
+            const checkboxes = card.querySelectorAll('.class-checkbox:checked');
+            const classIds = Array.from(checkboxes).map(cb => cb.value);     
+            const promise = fetch('/api/v1/admin/assignments/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    teacher_id: teacherId,
+                    subject: subject,
+                    class_ids: classIds
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            });    
+            promises.push(promise);
+        });
+        Promise.all(promises)
+            .then(results => {
+                const totalCreated = results.reduce((sum, r) => sum + (r.classes ? r.classes.length : 0), 0);
+                alert(`Erfolgreich gespeichert! ${totalCreated} Zuweisungen erstellt/aktualisiert.`);
+                location.reload();
+            })
+            .catch(error => {
+                console.error('Error during save:', error);
+                alert('Fehler beim Speichern: ' + error.message);
+            });
+    }
+</script>
+</script>
+</body>
+</html>

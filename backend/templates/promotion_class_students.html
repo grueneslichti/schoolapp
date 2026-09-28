@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schüler versetzen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">Schüler versetzen</span>
+            <a href="/admin/promotion-manager" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Zurück</a>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Schüler der Klasse {{ school_class.name }}</h3>
+            </div>
+            <div class="card-body">
+                {% if students|length == 0 %}
+                <div class="alert alert-warning">Keine Schüler in dieser Klasse.</div>
+                {% else %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Pseudonym</th>
+                                <th>XP</th>
+                                <th>Versetzen nach</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.name }}</td>
+                                <td>{{ student.pseudonym }}</td>
+                                <td><span class="badge bg-success">{{ student.xp }} XP</span></td>
+                                <td>
+                                    <select class="form-select form-select-sm" id="target-{{ student.id }}">
+                                        {% for class in all_classes %}
+                                        <option value="{{ class.id }}">{{ class.display_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <button onclick="promoteStudent('{{ student.id }}')" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-arrow-up"></i> Versetzen
+                                    </button>
+                                    <button onclick="graduateStudent('{{ student.id }}', '{{ student.name }}')" class="btn btn-danger btn-sm">
+                                        <i class="fa-solid fa-graduation-cap"></i> Abschluss
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <script>
+        function promoteStudent(studentId) {
+            const targetClass = document.getElementById('target-' + studentId).value;     
+            fetch('/admin/promotion-manager/api/promote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: studentId, new_class_id: targetClass })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || 'Schüler versetzt');
+                location.reload();
+            })
+            .catch(err => alert('Fehler: ' + err));
+        }
+
+        function graduateStudent(studentId, name) {
+            if (!confirm(`Möchtest du ${name} wirklich abschließen?\n\nDas Profil wird gelöscht!`)) {
+                return;
+            }
+            fetch('/admin/promotion-manager/api/graduate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ student_id: studentId, keep_profile: false })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || 'Schüler abgeschlossen');
+                location.reload();
+            })
+            .catch(err => alert('Fehler: ' + err));
+        }
+    </script>
+</body>
+</html>

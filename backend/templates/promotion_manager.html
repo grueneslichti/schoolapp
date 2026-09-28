@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassenversetzung</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand"><i class="fa-solid fa-arrow-up-right-dots"></i> Klassenversetzung</span>
+            <a href="/admin" class="btn btn-outline-light btn-sm"><i class="fa-solid fa-arrow-left"></i> Admin-Panel</a>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h3>Schüler versetzen</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa-solid fa-info-circle"></i>
+                    Wählen Sie eine Klasse aus, um die Schüler zu versetzen, oder nutzen Sie die Klassen-Versetzung.
+                </div>
+                <a href="/admin/promotion-manager/school-transfer" class="btn btn-info btn-lg mb-4">
+    <i class="fa-solid fa-school-circle-check"></i>
+    Schulwechsel
+    </a>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Klasse</th>
+                                <th>Schule</th>
+                                <th>Schüler</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in classes %}
+                            <tr>
+                                <td><strong>{{ class.name }}</strong></td>
+                                <td>{{ class.school_name }}</td>
+                                <td><span class="badge bg-primary">{{ class.student_count }} Schüler</span></td>
+                                <td>
+                                    <a href="/admin/promotion-manager/class/{{ class.id }}" class="btn btn-primary btn-sm">
+                                        <i class="fa-solid fa-users"></i> Schüler anzeigen
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header">
+                <h3>Klassenversetzung</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fa-solid fa-triangle-exlamation"></i>
+                    <strong>Wichtig:</strong> Nutzen Sie den Zeit-Filter, um alle Schüler zu versetzen.
+                    </div>
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Von Klasse:</label>
+                        <select id="bulk-from-class" class="form-select">
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.school_name }} - {{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Nach Klasse:</label>
+                        <select id="bulk-to-class" class="form-select">
+                            {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.school_name }} - {{ class.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button onclick="bulkPromote()" class="btn btn-success w-100">
+                            <i class="fa-solid fa-people-group"></i> Versetzen
+                        </button>
+                    </div>
+                </div>
+            </div>
+             <div class="row">
+            <div class="col-md-12">
+                <label class="form-label">
+                    <i class="fa-solid fa-filter"></i>
+                    Nur Schüler versetzen, die länger als X Tage in der Klasse sind:
+                </label>
+                <select id="bulk-filter-days" class="form-select">
+                    <option value="">Alle Schüler (kein Filter)</option>
+                    <option value="30">Länger als 30 Tage</option>
+                    <option value="60">Länger als 60 Tage</option>
+                    <option value="90">Länger als 90 Tage</option>
+                    <option value="180">Länger als 180 Tage</option>
+                    <option value="365">Länger als 1 Jahr</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-header">
+        <h3>Letzte Versetzungen (History)</h3>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-8">
+                <label class="form-label">Klasse auswählen:</label>
+                <select id="history-class" class="form-select" onchange="loadHistory()">
+                    <option value="">-- Klasse wählen --</option>
+                    {% for class in classes %}
+                    <option value="{{ class.id }}">{{ class.school_name }} - {{ class.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button onclick="bulkUndo()" class="btn btn-warning w-100" id="bulk-undo-btn" disabled>
+                    <i class="fa-solid fa-rotate-left"></i> Ausgewählte rückgängig
+                </button>
+            </div>
+        </div>
+        <div id="history-container"></div>
+    </div>
+</div>
+
+    <script>
+        let currentHistory = [];
+        let selectedHistoryIds = new Set();
+        function bulkPromote() {
+            const fromClass = document.getElementById('bulk-from-class').value;
+            const toClass = document.getElementById('bulk-to-class').value;
+            const filterDays = document.getElementById('bulk-filter-days').value;
+            if (fromClass === toClass) {
+                alert('Bitte wählen Sie unterschiedliche Klassen!');
+                return;
+            }
+            const filterText = filterDays ? ` (nur Schüler älter als ${filterDays} Tage)` : ' (alle Schüler)';
+            if (!confirm('Möchten Sie wirklich ALLE Schüler der Klasse versetzen?')) {
+                return;
+            }
+            const payload = {
+                from_class_id: fromClass,
+                to_class_id: toClass
+            };
+            if (filterDays) {
+            payload.only_older_than_days = parseInt(filterDays);
+        }
+            fetch('/admin/promotion-manager/api/bulk-promote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from_class_id: fromClass, to_class_id: toClass })
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || 'Versetzung abgeschlossen');
+                location.reload();
+            })
+            .catch(err => alert('Fehler: ' + err));
+        }
+        function loadHistory() {
+        const classId = document.getElementById('history-class').value;
+        if (!classId) {
+            document.getElementById('history-container').innerHTML = '';
+            return;
+        } 
+        fetch(`/admin/promotion-manager/api/history/${classId}`)
+        .then(r => r.json())
+        .then(data => {
+            currentHistory = data.history || [];
+            selectedHistoryIds.clear();
+            renderHistory();
+            updateBulkUndoButton();
+        })
+        .catch(err => {
+            document.getElementById('history-container').innerHTML = '<div class="alert alert-danger">Fehler beim Laden</div>';
+        });
+    }
+     function renderHistory() {
+        const container = document.getElementById('history-container');  
+        if (currentHistory.length === 0) {
+            container.innerHTML = '<div class="alert alert-info">Keine Versetzungen für diese Klasse gefunden.</div>';
+            return;
+        }   
+        let html = '<div class="table-responsive"><table class="table table-hover">';
+        html += '<thead><tr><th><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th><th>Schüler</th><th>Von</th><th>Datum</th><th>Von</th><th>Aktion</th></tr></thead>';
+        html += '<tbody>';  
+        currentHistory.forEach(h => {
+            const date = new Date(h.promoted_at).toLocaleString('de-DE');
+            const isChecked = selectedHistoryIds.has(h.history_id) ? 'checked' : '';    
+            html += `<tr>
+                <td><input type="checkbox" class="history-checkbox" value="${h.history_id}" ${isChecked} onchange="toggleHistorySelection('${h.history_id}')"></td>
+                <td>${h.student_name}</td>
+                <td>${h.from_class}</td>
+                <td>${date}</td>
+                <td>${h.promoted_by || 'Admin'}</td>
+                <td>
+                    <button onclick="undoPromotion('${h.history_id}')" class="btn btn-sm btn-warning">
+                        <i class="fa-solid fa-rotate-left"></i> Rückgängig
+                    </button>
+                </td>
+            </tr>`;
+        });   
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+    function toggleHistorySelection(historyId) {
+        if (selectedHistoryIds.has(historyId)) {
+            selectedHistoryIds.delete(historyId);
+        } else {
+            selectedHistoryIds.add(historyId);
+        }
+        updateBulkUndoButton();
+    }
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('select-all').checked;
+        const checkboxes = document.querySelectorAll('.history-checkbox');  
+        selectedHistoryIds.clear(); 
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll;
+            if (selectAll) {
+                selectedHistoryIds.add(cb.value);
+            }
+        });
+        updateBulkUndoButton();
+    }
+    function updateBulkUndoButton() {
+        const btn = document.getElementById('bulk-undo-btn');
+        btn.disabled = selectedHistoryIds.size === 0;
+        btn.innerHTML = `<i class="fa-solid fa-rotate-left"></i> ${selectedHistoryIds.size} rückgängig`;
+    }
+    function undoPromotion(historyId) {
+        if (!confirm('Diese Versetzung wirklich rückgängig machen?')) {
+            return;
+        } 
+        fetch('/admin/promotion-manager/api/undo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ history_id: historyId })
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message || 'Rückgängig gemacht');
+            loadHistory();
+        })
+        .catch(err => alert('Fehler: ' + err));
+    }
+    function bulkUndo() {
+        if (selectedHistoryIds.size === 0) {
+            alert('Keine Versetzungen ausgewählt!');
+            return;
+        }
+        if (!confirm(`Möchtest du wirklich ${selectedHistoryIds.size} Versetzungen rückgängig machen?`)) {
+            return;
+        }
+        fetch('/admin/promotion-manager/api/bulk-undo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ history_ids: Array.from(selectedHistoryIds) })
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message || 'Rückgängig gemacht');
+            loadHistory();
+        })
+        .catch(err => alert('Fehler: ' + err));
+    }
+    </script>
+</body>
+</html>
