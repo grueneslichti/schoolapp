@@ -1,3 +1,9 @@
+Empfehlungen für den Produktivbetrieb:
+- Server in **Österreich/EU**
+- **HTTPS**
+- Regelmäßige **Backups** der `app.db`
+- **ACHTUNG!!! `SECRET_KEY` unbedingt ändern bei kommerzieller Nutzung !!!**  Zu finden in /backend/config.py
+
 # Struktur
 
 - `backend/` – FastAPI Backend (Python)
