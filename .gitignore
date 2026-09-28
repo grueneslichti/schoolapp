@@ -1,56 +1,45 @@
-# ============ Python/Backend ============
+# Python/Backend
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-.venv/
-venv/
 env/
+venv/
+.venv/
 .env
 .env.local
 *.log
-
-# Datenbank
 *.db
 *.db-journal
 *.db-shm
 *.db-wal
-app.db
 
-# Uploads - NIEMALS committen!
-backend/uploads/
-uploads/
+# Flutter/App
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.pub-cache/
+.pub/
+pubspec.lock
+
+# Uploads - NIEMALS echte Dateien committen!
+backend/uploads/*
+!backend/uploads/.gitkeep
+!backend/uploads/schools/.gitkeep
+!backend/uploads/avatars/.gitkeep
+!backend/uploads/graduation/.gitkeep
 
 # IDE
 .vscode/
 .idea/
 *.swp
+*.swo
 
-# ============ Flutter ============
-app/.dart_tool/
-app/.packages
-app/.flutter-plugins
-app/.flutter-plugins-dependencies
-app/build/
-app/.pub-cache/
-app/.pub/
-app/pubspec.lock
-
-# Lokale Flutter-Konfiguration
-app/.metadata
-app/android/app/debug
-app/android/app/profile
-app/ios/Flutter/.last_build_id
-app/ios/Runner.xcworkspace/xcuserdata/
-app/ios/Pods/
-
-# ============ OS ============
+# OS
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# ============ Secrets ============
-*.key
-*.pem
-secrets/
