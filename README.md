@@ -32,6 +32,15 @@ mit XP-System, Avataren, Spielen und KI-Maskottchen.
 - Optional: **KoboldCpp** + ein GGUF-Modell für das KI-Maskottchen
 - Optional: **Pillow** wird für Klassenabschluss-Fotos gebraucht
 
+## Self-Hosting für Schulen
+Die App ist dafür gemacht, dass Schulen sie selbst betreiben alle Daten bleiben im Haus.
+
+Empfehlungen für den Produktivbetrieb:
+- Server in **Österreich/EU**
+- **HTTPS**
+- Regelmäßige **Backups** der `app.db`
+- **ACHTUNG!!! `SECRET_KEY` unbedingt ändern bei kommerzieller Nutzung !!!**
+
 ## Installation
 
 ### Backend
@@ -39,7 +48,7 @@ git clone https://github.com//schulapp.git
 cd schulapp/backend
 
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 
 pip install -r requirements.txt
 
