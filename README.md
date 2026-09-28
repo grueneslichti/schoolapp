@@ -61,7 +61,8 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 cd ../schulapp
 flutter pub get
 
-# WICHTIG: In lib/services/api_service.dart die Server-IP 
-# auf deinen Backend-Rechner ändern (z.B. http://192.168.8.119:8000)
+**WICHTIG:** 
+In lib/services/api_service.dart die Server-IP 
+auf deinen Backend-Rechner ändern (z.B. http://192.168.8.119:8000)
 
 flutter run
