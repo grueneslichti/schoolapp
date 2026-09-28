@@ -32,6 +32,6 @@ flutter pub get
 
 **WICHTIG:** 
 In lib/services/api_service.dart die Server-IP 
-auf deinen Backend-Rechner ändern (z.B. http://192.168.8.119:8000)
+auf einen eventuellen Backend-Rechner ändern (z.B. http://192.168.8.119:8000)
 
 flutter run
