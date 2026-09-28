@@ -7,7 +7,7 @@ mit XP-System, Avataren, Spielen und KI-Maskottchen.
 
 ## Features
 - **XP- & Level-System** – Motivation durch Belohnungen
-- **Avatar-System** mit Shop und Anime-Style-Option
+- **Avatar-System** mit Shop und Anime-Style-Option. Keine echtgeld einkäufe möglich.
 - **KI-Maskottchen „Lottie"** – lokal laufend, keine Cloud
 - **Spiele** mit Testphase & XP-Freischaltung (Zahlenjagd, Mathe-Jagd, Function Master)
 - **Kummerkasten** – anonymes Feedback an Lehrkräfte
@@ -16,6 +16,7 @@ mit XP-System, Avataren, Spielen und KI-Maskottchen.
 - **Lehrer-Postfach** für Kolleg:innen
 - **Mehrstufigkeit** (Grundschule/Mittelstufe/Oberstufe) mit eigenen UIs
 - **Self-Hosting** – alle Daten bleiben an der Schule
+- Spiele sind während des Unterrichts nicht zugänglich.
 
 ## Tech-Stack
 | Bereich | Technologie |
